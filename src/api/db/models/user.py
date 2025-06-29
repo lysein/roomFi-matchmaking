@@ -1,22 +1,28 @@
-from sqlalchemy import Column, Integer, String, Float, JSON, Boolean, DateTime
-from sqlalchemy.sql import func
-from .base import Base
+from sqlalchemy import Column, Integer, String, Float, Text, JSON, TIMESTAMP, func
+from sqlalchemy.dialects.postgresql import UUID
+from src.api.db.models.base import Base
 
-class User(Base):
-    __tablename__ = "users"
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+
     first_name = Column(String, nullable=False)
-    middle_name = Column(String)
-    last_name_1 = Column(String, nullable=False)
-    last_name_2 = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False, index=True)
-    gender = Column(String)
-    age = Column(Integer)
-    lgbtq = Column(Boolean, default=False)
-    budget_min = Column(Float)
-    budget_max = Column(Float)
-    location_preference = Column(String)
-    lifestyle_tags = Column(JSON)
-    roomie_preferences = Column(JSON)  # Will be validated with Pydantic schema
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_name = Column(String, nullable=False)
+
+    gender = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+
+    budget_min = Column(Float, nullable=True)
+    budget_max = Column(Float, nullable=True)
+
+    location_preference = Column(String, nullable=True)
+
+    lifestyle_tags = Column(JSON, nullable=True)
+    roomie_preferences = Column(JSON, nullable=True)
+
+    bio = Column(Text, nullable=True)
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), onupdate=func.now())
