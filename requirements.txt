@@ -2,3 +2,5 @@ asyncpg
 sqlalchemy[asyncio]
 python-dotenv
 asyncpg
+jwt
+pydantic-settings

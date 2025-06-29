@@ -1,0 +1,19 @@
+from pydantic_settings import BaseSettings
+from dotenv import load_dotenv, find_dotenv
+import logging
+logger = logging.getLogger(__name__)
+
+# Automatically find and load the .env file
+load_dotenv(find_dotenv())
+
+class Settings(BaseSettings):
+    DATABASE_URL: str
+    SUPABASE_JWT_SECRET: str
+    SUPABASE_ANON_KEY: str
+    SUPABASE_URL: str
+
+settings = Settings()
+
+logger.info("Configuration loaded successfully.")
+logger.info(f"DATABASE_URL: {settings.DATABASE_URL}")
+logger.info(f"SUPABASE_JWT_SECRET: {settings.SUPABASE_JWT_SECRET}")
