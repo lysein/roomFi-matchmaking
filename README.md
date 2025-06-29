@@ -9,7 +9,7 @@ Do not copy, distribute, or modify the contents without written permission.
 # 🏗️ RoomiFi Backend – Development Progress (June 29, 2025)
 
 🎯 **Goal:**
-Develop a FastAPI-based backend connected to Supabase for matchmaking between roommates and apartments.
+Develop a FastAPI-based backend connected to Supabase for matchmaking between roommate groups and properties, including a financial staking model to unlock access.
 
 ---
 
@@ -33,13 +33,19 @@ Develop a FastAPI-based backend connected to Supabase for matchmaking between ro
 roomfi-matchmaking/
 ├── src/
 │   ├── db/
-│   │   ├── models/         # SQLAlchemy models (User, Property, Match)
-│   │   ├── schemas/        # Pydantic schemas (UserCreate, PropertyOut, etc.)
-│   │   └── session.py      # Async DB engine and get_db() helper
+│   │   ├── models/
+│   │   │   ├── user.py
+│   │   │   ├── property.py
+│   │   │   ├── match.py
+│   │   │   ├── group.py              # ✅ NEW
+│   │   │   ├── group_match.py        # ✅ NEW
+│   │   │   ├── stake.py              # ✅ NEW
+│   │   ├── schemas/
+│   │   └── session.py
 │   └── ...
 ├── notebooks/
-│   └── init_db.ipynb       # Creates tables in Supabase via async SQLAlchemy
-├── .env                    # DATABASE_URL with asyncpg
+│   └── init_db.ipynb                 # ✅ Updated with new model imports
+├── .env
 ├── requirements.txt
 └── README.md
 ```
@@ -48,86 +54,76 @@ roomfi-matchmaking/
 
 ## 📦 Models Implemented
 
-### 🧍 `User`
+### 🧍 `User` – individual renter
 
-Includes full identity fields and roomie preferences:
+Includes identity, preferences, and lifestyle tags.
 
+### 🏘️ `RoomieGroup` – group of users forming a co-renting party
 ```sql
-id, first_name, middle_name, last_name_1, last_name_2, email,
-gender, age, lgbtq, budget_min, budget_max, location_preference,
-lifestyle_tags (JSON), roomie_preferences (JSON), created_at
+id, members (array of user_ids), status, created_at
 ```
 
-Roomie preferences now support:
-
-- property_type
-- move_in_range (start/end)
-- pet_friendly
-- lgbtq_only
-- amenities, amenidad_extras
-- parking
-
-### 🏠 `Property`
-
+### 🧮 `GroupMatch` – links a group to a property with a match score
 ```sql
-id, owner_id (FK), address, location, price, property_type,
-num_rooms, bathrooms, deposit_months, contract_length_months,
-amenities (JSON), amenidad_extras (JSON), parking (bool),
-security_features (JSON), available_from, available_to, created_at
+id, group_id, property_id, match_score, status, created_at
 ```
 
-### 🤝 `Match`
-
+### 💸 `Stake` – payment tracking for access unlocking
 ```sql
-id, user_id, matched_user_id (nullable), matched_property_id (nullable),
-score, status, created_at
+id, user_id, group_id, amount_mxn, confirmed, confirmed_at, txn_id
 ```
 
----
-
-## 📘 Schemas Implemented
-
-- `UserBase`, `UserCreate`, `UserOut`
-- `RoomiePreferences`, `MoveInRange`
-- `PropertyBase`, `PropertyCreate`, `PropertyOut`
-- `MatchBase`, `MatchCreate`, `MatchOut`
-
-All schemas are located in: `src/db/schemas/`
+### 🏠 `Property` – available rental units
+Updated with:
+```sql
+preferred_tenants (JSON)
+```
 
 ---
 
 ## 🔧 Database Initialization
 
 - Notebook: `notebooks/init_db.ipynb`
-- Loads `.env` and connects to Supabase via `postgresql+asyncpg://...`
-- Creates all tables from SQLAlchemy `Base.metadata.create_all(...)`
+- Imports all new models
+- Creates all tables via SQLAlchemy’s `Base.metadata.create_all`
+
+---
+
+## ✅ Commit Reference
+
+These architectural changes were introduced in commit:
+
+```txt
+SHA: [INSERT_COMMIT_SHA_HERE]
+```
 
 ---
 
 ## 🧪 Status
 
-| Feature                 | Status     |
-|-------------------------|------------|
-| Supabase connection     | ✅ Working |
-| Tables created          | ✅ Yes     |
-| Models + Schemas        | ✅ Done    |
-| Roomie preferences model| ✅ Done    |
-| API endpoints           | 🔜 Next    |
-| Matchmaking logic       | 🔜 Soon    |
+| Feature                      | Status     |
+|------------------------------|------------|
+| Supabase connection          | ✅ Working |
+| Tables created               | ✅ Yes     |
+| Matchable group modeling     | ✅ Added   |
+| Staking/payment tracking     | ✅ Added   |
+| Tenant preference filtering  | ✅ Added   |
+| API endpoints                | 🔜 Next    |
+| Matchmaking scoring logic    | 🔜 Soon    |
 
 ---
 
 ## 🔜 Next Steps
 
-1. Scaffold `/users` endpoints (create, read)
-2. Add `/properties` and `/match` endpoints
-3. Build matchmaking logic into `src/services/matchmaking.py`
+1. Scaffold `/users` and `/match/find` endpoints
+2. Define JSON response shape for group+property recommendations
+3. Stub payment service or Juno webhook logic
+4. Add chat unlock API gated by stake confirmation
 
 ---
 
 ## 🧠 Collaboration Notes
 
-- Run `notebooks/init_db.ipynb` to recreate or inspect the schema
-- Use `.env` to configure your local environment
-- Supabase handles DB + optional RLS + auth if needed
-- Ask for connection string access if joining the team
+- To reset DB schema: run `notebooks/init_db.ipynb`
+- `.env` must contain `DATABASE_URL` with asyncpg
+- Access to Supabase and deposits/transactions are currently mocked

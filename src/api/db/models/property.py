@@ -22,3 +22,4 @@ class Property(Base):
     available_from = Column(DateTime)
     available_to = Column(DateTime)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    preferred_tenants = Column(JSON)  # landlord-defined preferences (optional)
