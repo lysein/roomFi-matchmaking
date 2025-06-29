@@ -1,3 +1,4 @@
 asyncpg
 sqlalchemy[asyncio]
 python-dotenv
+asyncpg
