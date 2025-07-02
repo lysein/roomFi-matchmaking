@@ -1,30 +1,19 @@
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, UUID4, Field, Extra
+from typing import List
 from datetime import datetime
 
-class PropertyBase(BaseModel):
-    owner_id: int
+class PropertyCreate(BaseModel):
+    owner_user_id: UUID4
     address: str
-    location: Optional[str]
+    location: str
     price: float
-    property_type: Optional[str]
+    amenities: List[str]
     num_rooms: int
     bathrooms: int
-    deposit_months: Optional[int]
-    contract_length_months: Optional[int]
-    amenities: Optional[List[str]] = []
-    amenidad_extras: Optional[List[str]] = []
-    parking: Optional[bool]
-    security_features: Optional[List[str]] = []
-    available_from: Optional[datetime]
-    available_to: Optional[datetime]
-
-class PropertyCreate(PropertyBase):
-    pass
-
-class PropertyOut(PropertyBase):
-    id: int
+    available_from: datetime
+    available_to: datetime
     created_at: datetime
+    updated_at: datetime
 
     class Config:
-        orm_mode = True
+        extra = "forbid"  # 🚫 Reject extra keys not defined above
