@@ -1,65 +1,93 @@
-# src/api/routers/matchmaking.py
-
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from datetime import datetime
 from typing import Optional
 from src.api.config import settings
-from supabase import create_client
+from supabase import create_client, Client
+import logging
 
 router = APIRouter()
-
-# Create Supabase client using settings
-client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
+client: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
 
 @router.post("/match/top")
 def match_top(user_id: str, top_k: Optional[int] = Query(5, ge=1, le=20)):
-    user = client.table("user_profiles").select("*").eq("user_id", user_id).single().execute().data
-    if not user:
-        return {"error": "User not found"}
+    try:
+        # 1. Fetch user
+        try:
+            user_resp = client.table("user_profiles").select("*").eq("user_id", user_id).single().execute()
+            user = user_resp.data
+        except Exception as e:
+            logging.error(f"Error fetching user profile: {e}")
+            raise HTTPException(status_code=404, detail="User not found or Supabase error")
 
-    budget_min = user["budget_min"]
-    budget_max = user["budget_max"]
-    location = user["location_preference"]
-    lifestyle_tags = set(user.get("lifestyle_tags") or [])
+        if not user:
+            raise HTTPException(status_code=404, detail="User profile is empty")
 
-    roommates = client.table("user_profiles") \
-        .select("*") \
-        .neq("user_id", user_id) \
-        .eq("location_preference", location) \
-        .gte("budget_max", budget_min) \
-        .lte("budget_min", budget_max) \
-        .execute().data
+        budget_min = user.get("budget_min")
+        budget_max = user.get("budget_max")
+        location = user.get("location_preference")
+        lifestyle_tags = set(user.get("lifestyle_tags") or [])
 
-    properties = client.table("properties") \
-        .select("*") \
-        .eq("location", location) \
-        .gte("price", budget_min) \
-        .lte("price", budget_max) \
-        .lte("available_from", datetime.utcnow().isoformat()) \
-        .execute().data
+        if not all([budget_min, budget_max, location]):
+            raise HTTPException(status_code=422, detail="User profile is missing required fields")
 
-    def roommate_score(rm):
-        rm_tags = set(rm.get("lifestyle_tags") or [])
-        tag_score = len(lifestyle_tags & rm_tags) / len(lifestyle_tags | rm_tags) if lifestyle_tags and rm_tags else 0
-        rm_budget_avg = (rm["budget_min"] + rm["budget_max"]) / 2
-        user_budget_avg = (budget_min + budget_max) / 2
-        budget_score = 1 - abs(user_budget_avg - rm_budget_avg) / max(user_budget_avg, rm_budget_avg)
-        return round(0.5 * budget_score + 0.5 * tag_score, 3)
+        # 2. Fetch roommate candidates
+        try:
+            roommates_resp = client.table("user_profiles") \
+                .select("*") \
+                .neq("user_id", user_id) \
+                .eq("location_preference", location) \
+                .gte("budget_max", budget_min) \
+                .lte("budget_min", budget_max) \
+                .execute()
+            roommates = roommates_resp.data or []
+        except Exception as e:
+            logging.error(f"Error fetching roommates: {e}")
+            raise HTTPException(status_code=500, detail="Failed to fetch roommates from Supabase")
 
-    def property_score(prop):
-        prop_amenities = set(prop.get("amenities") or [])
-        amenity_score = len(lifestyle_tags & prop_amenities) / len(lifestyle_tags | prop_amenities) if lifestyle_tags and prop_amenities else 0
-        price_score = 1 - abs(((budget_min + budget_max) / 2) - prop["price"]) / budget_max
-        return round(0.7 * price_score + 0.3 * amenity_score, 3)
+        # 3. Fetch property candidates
+        try:
+            properties_resp = client.table("properties") \
+                .select("*") \
+                .eq("location", location) \
+                .gte("price", budget_min) \
+                .lte("price", budget_max) \
+                .lte("available_from", datetime.utcnow().isoformat()) \
+                .execute()
+            properties = properties_resp.data or []
+        except Exception as e:
+            logging.error(f"Error fetching properties: {e}")
+            raise HTTPException(status_code=500, detail="Failed to fetch properties from Supabase")
 
-    top_roommates = sorted(roommates, key=roommate_score, reverse=True)[:top_k]
-    top_properties = sorted(properties, key=property_score, reverse=True)[:top_k]
+        # 4. Score functions
+        def roommate_score(rm):
+            rm_tags = set(rm.get("lifestyle_tags") or [])
+            tag_score = len(lifestyle_tags & rm_tags) / len(lifestyle_tags | rm_tags) if lifestyle_tags and rm_tags else 0
+            rm_budget_avg = (rm.get("budget_min", 0) + rm.get("budget_max", 0)) / 2
+            user_budget_avg = (budget_min + budget_max) / 2
+            budget_score = 1 - abs(user_budget_avg - rm_budget_avg) / max(user_budget_avg, rm_budget_avg) if rm_budget_avg else 0
+            return round(0.5 * budget_score + 0.5 * tag_score, 3)
 
-    return {
-        "roommate_matches": [
-            {"user_id": rm["user_id"], "score": roommate_score(rm)} for rm in top_roommates
-        ],
-        "property_matches": [
-            {"property_id": prop["id"], "score": property_score(prop)} for prop in top_properties
-        ]
-    }
+        def property_score(prop):
+            amenities = set(prop.get("amenities") or [])
+            amenity_score = len(lifestyle_tags & amenities) / len(lifestyle_tags | amenities) if lifestyle_tags and amenities else 0
+            price_score = 1 - abs(((budget_min + budget_max) / 2) - prop.get("price", 0)) / budget_max
+            return round(0.7 * price_score + 0.3 * amenity_score, 3)
+
+        # 5. Sort and return
+        top_roommates = sorted(roommates, key=roommate_score, reverse=True)[:top_k]
+        top_properties = sorted(properties, key=property_score, reverse=True)[:top_k]
+
+        return {
+            "roommate_matches": [
+                {"user_id": rm["user_id"], "score": roommate_score(rm)} for rm in top_roommates
+            ],
+            "property_matches": [
+                {"property_id": prop["id"], "score": property_score(prop)} for prop in top_properties
+            ]
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.exception("Unhandled matchmaking error")
+        raise HTTPException(status_code=500, detail="Internal server error during matchmaking")
