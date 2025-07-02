@@ -16,3 +16,6 @@ class UserProfileCreate(BaseModel):
     roomie_preferences: Optional[dict] = None
     bio: Optional[str] = None
     profile_image_url: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
