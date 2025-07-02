@@ -17,3 +17,9 @@ settings = Settings()
 logger.info("Configuration loaded successfully.")
 logger.info(f"DATABASE_URL: {settings.DATABASE_URL}")
 logger.info(f"SUPABASE_JWT_SECRET: {settings.SUPABASE_JWT_SECRET}")
+
+from supabase import create_client, Client
+
+SUPABASE_URL = settings.SUPABASE_URL
+SUPABASE_KEY = settings.SUPABASE_ANON_KEY
+client = create_client(SUPABASE_URL, SUPABASE_KEY)

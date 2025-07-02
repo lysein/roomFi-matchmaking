@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routers import auth
 from src.api.routers import dev_auth
 from src.api.routers import matchmaking
+from src.api.routers import new_user
 
 
 app = FastAPI()
@@ -19,9 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/auth")
-app.include_router(dev_auth.router, prefix="/dev-auth")
-app.include_router(matchmaking.router, prefix="/matchmaking")
+app.include_router(matchmaking.router, prefix="/matchmaking", tags=["matchmaking"])
+app.include_router(new_user.router, prefix="/db/new",tags=["user_profiles"])
 
 if __name__ == "__main__":
     import uvicorn
