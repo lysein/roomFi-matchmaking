@@ -5,7 +5,7 @@ from src.api.config import client
 
 router = APIRouter()
 
-@router.post("/user")
+@router.post("/new/user")
 def create_user_profile(payload: UserProfileCreate):
     # Check if profile already exists
     existing = client.table("user_profiles").select("user_id").eq("user_id", str(payload.user_id)).execute()
@@ -30,3 +30,12 @@ def create_user_profile(payload: UserProfileCreate):
     }).execute()
 
     return {"message": "User profile created", "user_id": payload.user_id}
+
+@router.get("/get/user")
+def get_user_profile(user_id: str):
+    # Fetch user profile
+    response = client.table("user_profiles").select("*").eq("user_id", user_id).single().execute()
+    if not response.data:
+        raise HTTPException(status_code=404, detail="User profile not found")
+
+    return response.data
