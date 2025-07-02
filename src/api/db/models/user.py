@@ -23,6 +23,7 @@ class UserProfile(Base):
     roomie_preferences = Column(JSON, nullable=True)
 
     bio = Column(Text, nullable=True)
+    profile_image_url = Column(String, nullable=True)
 
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), onupdate=func.now())
