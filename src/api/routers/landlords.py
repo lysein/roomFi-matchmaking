@@ -36,3 +36,12 @@ def get_landlord_profile(user_id: str):
         raise HTTPException(status_code=404, detail="Landlord profile not found")
 
     return response.data
+
+@router.get("/get/landlord/properties")
+def get_landlord_properties(user_id: str):
+    # Fetch properties owned by the landlord
+    response = client.table("properties").select("*").eq("owner_user_id", user_id).execute()
+    if not response.data:
+        raise HTTPException(status_code=404, detail="No properties found for this landlord")
+
+    return response.data
