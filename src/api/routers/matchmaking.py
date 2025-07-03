@@ -25,6 +25,7 @@ def match_top(user_id: str, top_k: Optional[int] = Query(5, ge=1, le=20)):
         budget_min = user.get("budget_min")
         budget_max = user.get("budget_max")
         location = user.get("location_preference")
+        location = location.strip().upper()
         lifestyle_tags = set(user.get("lifestyle_tags") or [])
 
         if not all([budget_min, budget_max, location]):
@@ -74,15 +75,15 @@ def match_top(user_id: str, top_k: Optional[int] = Query(5, ge=1, le=20)):
             return round(0.7 * price_score + 0.3 * amenity_score, 3)
 
         # 5. Sort and return
-        top_roommates = sorted(roommates, key=roommate_score, reverse=True)[:top_k]
-        top_properties = sorted(properties, key=property_score, reverse=True)[:top_k]
+        top_roommates = sorted(roommates, key=roommate_score, reverse=True)[:min(top_k, len(roommates))]
+        top_properties = sorted(properties, key=property_score, reverse=True)[:min(top_k, len(properties))]
 
         return {
             "roommate_matches": [
-                {"user_id": rm["user_id"], "score": roommate_score(rm)} for rm in top_roommates
+                {**rm, "score": roommate_score(rm)} for rm in top_roommates
             ],
             "property_matches": [
-                {"property_id": prop["id"], "score": property_score(prop)} for prop in top_properties
+                {**prop, "score": property_score(prop)} for prop in top_properties
             ]
         }
 
