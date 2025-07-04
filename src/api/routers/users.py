@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from src.api.db.schemas.user import UserProfileCreate
+from src.api.db.schemas.inputs.user import UserProfileCreate
 from src.api.config import client
 
 router = APIRouter()

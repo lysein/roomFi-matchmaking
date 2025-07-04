@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from src.api.db.schemas.property import PropertyCreate
+from src.api.db.schemas.inputs.property import PropertyCreate
 from src.api.config import client
 
 router = APIRouter()

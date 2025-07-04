@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter, HTTPException
 from src.api.config import client
-from src.api.db.schemas.landlord import LandlordProfileCreate
+from src.api.db.schemas.inputs.landlord import LandlordProfileCreate
+from src.api.db.schemas.outputs.landlord import LandlordProfileOut
 from datetime import datetime
 
 router = APIRouter()
@@ -28,7 +29,7 @@ def create_landlord_profile(payload: LandlordProfileCreate):
 
     return {"message": "Landlord profile created", "user_id": payload.user_id}
 
-@router.get("/get/landlord")
+@router.get("/get/landlord", response_model=LandlordProfileOut)
 def get_landlord_profile(user_id: str):
     # Fetch landlord profile
     response = client.table("landlord_profile").select("*").eq("user_id", user_id).single().execute()
