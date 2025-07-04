@@ -1,12 +1,13 @@
 # src/api/schemas/user.py
 
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, EmailStr
 from typing import Optional, List
 
 class UserProfileCreate(BaseModel):
     user_id: UUID4
     first_name: str
     last_name: str
+    email: Optional[EmailStr] = None
     gender: Optional[str] = None
     age: Optional[int] = None
     budget_min: Optional[float] = None

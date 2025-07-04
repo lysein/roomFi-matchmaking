@@ -10,6 +10,7 @@ class UserProfile(Base):
 
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
+    email = Column(String, nullable=True)
 
     gender = Column(String, nullable=True)
     age = Column(Integer, nullable=True)

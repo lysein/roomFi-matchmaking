@@ -87,3 +87,9 @@ Let me know if you'd like to implement that next.
 - Use `supabase.auth.getUser()` to get it after login
 - Always use the real Auth-generated UUID, never a random one
 - Optional: use JWT + RLS to make it fully secure and hidden from the frontend
+
+====== UPDATES =====
+Added email col. 03/08/2025
+
+ALTER TABLE user_profiles
+ADD COLUMN email VARCHAR;
