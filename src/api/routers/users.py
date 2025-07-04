@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from src.api.db.schemas.inputs.user import UserProfileCreate
+from src.api.db.schemas.outputs.user import UserProfileOut
 from src.api.config import client
 
 router = APIRouter()
@@ -31,7 +32,7 @@ def create_user_profile(payload: UserProfileCreate):
 
     return {"message": "User profile created", "user_id": payload.user_id}
 
-@router.get("/get/user")
+@router.get("/get/user", response_model=UserProfileOut)
 def get_user_profile(user_id: str):
     # Fetch user profile
     response = client.table("user_profiles").select("*").eq("user_id", user_id).single().execute()
