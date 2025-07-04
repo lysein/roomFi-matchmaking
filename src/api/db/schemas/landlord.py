@@ -6,7 +6,8 @@ from datetime import datetime
 
 class LandlordProfileCreate(BaseModel):
     user_id: UUID4
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     verified: Optional[bool] = False

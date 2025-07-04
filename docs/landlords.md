@@ -93,3 +93,16 @@ SET email =
     )
   ) || '@example.com'
 WHERE email IS NULL;
+
+fullname -> firstname, lastname
+ALTER TABLE landlord_profile
+ADD COLUMN first_name VARCHAR,
+ADD COLUMN last_name VARCHAR;
+
+UPDATE landlord_profile
+SET 
+  first_name = split_part(full_name, ' ', 1),
+  last_name = split_part(full_name, ' ', array_length(string_to_array(full_name, ' '), 1));
+
+ALTER TABLE landlord_profile
+DROP COLUMN full_name;

@@ -9,7 +9,8 @@ class LandlordProfile(Base):
     id = Column(Integer, primary_key=True, index=True)  # 👈 Surrogate key
     user_id = Column(UUID(as_uuid=True), nullable=False, unique=True, index=True)  # 👈 FK to auth.users
 
-    full_name = Column(String, nullable=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     email = Column(String, nullable=True)
 
