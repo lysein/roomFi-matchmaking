@@ -11,6 +11,8 @@ class LandlordProfile(Base):
 
     full_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+
     verified = Column(Boolean, default=False)
     bio = Column(Text, nullable=True)
     profile_image_url = Column(String, nullable=True)

@@ -69,3 +69,27 @@ Status: 200 OK
   "message": "User profile created",
   "user_id": "2f850ed7-8138-4c7f-aaf4-cd4ba2b5c930"
 }
+
+======= UPDATES
+
+03/08/2025 add email col
+
+
+--- Auditing matches table
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'landlord_profile'
+  AND table_schema = 'public';
+
+ALTER TABLE landlord_profile
+ADD COLUMN email VARCHAR;
+
+UPDATE landlord_profile
+SET email = 
+  LOWER(
+    REGEXP_REPLACE(
+      REGEXP_REPLACE(full_name, '\s+', '.', 'g'),  -- replace spaces with dots
+      '[^a-zA-Z0-9.@]', '', 'g'                     -- remove non-alphanumeric characters except dot/@
+    )
+  ) || '@example.com'
+WHERE email IS NULL;
