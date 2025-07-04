@@ -10,6 +10,7 @@ class LandlordProfileOut(BaseModel):
     user_id: UUID
     first_name: Optional[str]
     last_name: Optional[str]
+    phone_number: Optional[str]
     email: Optional[EmailStr]
     phone_number: Optional[str]
     verified: Optional[bool]

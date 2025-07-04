@@ -8,6 +8,7 @@ class UserProfileCreate(BaseModel):
     first_name: str
     last_name: str
     email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
     gender: Optional[str] = None
     age: Optional[int] = None
     budget_min: Optional[float] = None

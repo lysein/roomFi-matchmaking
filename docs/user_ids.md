@@ -93,3 +93,14 @@ Added email col. 03/08/2025
 
 ALTER TABLE user_profiles
 ADD COLUMN email VARCHAR;
+
+===ADD n expose phone number
+ALTER TABLE user_profiles
+ADD COLUMN phone_number VARCHAR;
+
+
+UPDATE user_profiles
+SET phone_number = 
+    '+52 55 ' || 
+    LPAD(FLOOR(random() * 10000)::text, 4, '0') || ' ' || 
+    LPAD(FLOOR(random() * 10000)::text, 4, '0');

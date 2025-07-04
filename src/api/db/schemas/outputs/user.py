@@ -8,6 +8,7 @@ class UserProfileOut(BaseModel):
     user_id: UUID
     first_name: str
     last_name: str
+    phone_number: Optional[str]
     email: Optional[EmailStr]
     gender: Optional[str]
     age: Optional[int]
