@@ -4,3 +4,4 @@ python-dotenv
 asyncpg
 jwt
 pydantic-settings
+pydantic[email]
