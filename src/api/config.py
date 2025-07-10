@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str
     SUPABASE_ANON_KEY: str
     SUPABASE_URL: str
+    JUNO_BASE_URL: str
+    JUNO_API_KEY: str
+    JUNO_API_SECRET: str
 
 settings = Settings()
 

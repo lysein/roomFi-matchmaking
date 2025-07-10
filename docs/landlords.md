@@ -106,3 +106,7 @@ SET
 
 ALTER TABLE landlord_profile
 DROP COLUMN full_name;
+
+ADD CLABE
+
+ALTER TABLE landlord_profile ADD COLUMN clabe VARCHAR;

@@ -104,3 +104,7 @@ SET phone_number =
     '+52 55 ' || 
     LPAD(FLOOR(random() * 10000)::text, 4, '0') || ' ' || 
     LPAD(FLOOR(random() * 10000)::text, 4, '0');
+
+=== ADD CLABE
+
+ALTER TABLE user_profiles ADD COLUMN clabe VARCHAR;

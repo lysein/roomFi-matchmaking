@@ -14,6 +14,8 @@ class PropertyCreate(BaseModel):
     available_to: datetime
     created_at: datetime
     updated_at: datetime
+    latitude: float = Field(..., description="Latitude of the property location")
+    longitude: float = Field(..., description="Longitude of the property location")
 
     class Config:
         extra = "forbid"  # 🚫 Reject extra keys not defined above

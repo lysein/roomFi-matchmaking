@@ -8,6 +8,7 @@ from datetime import datetime
 class LandlordProfileOut(BaseModel):
     id: int
     user_id: UUID
+    clabe: str
     first_name: Optional[str]
     last_name: Optional[str]
     phone_number: Optional[str]

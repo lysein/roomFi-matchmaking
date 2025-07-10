@@ -82,3 +82,10 @@ Make sure this audit log is tracked in Git under:
 git add docs/schema/properties_table_audit.md
 git commit -m "Audit log and RLS policy for properties table"
 ```
+
+==== ADD LATITUDE LONG
+ALTER TABLE properties ADD COLUMN latitude DOUBLE PRECISION;
+ALTER TABLE properties ADD COLUMN longitude DOUBLE PRECISION;
+
+=== ADD CLABE
+ALTER TABLE properties ADD COLUMN clabe;

@@ -6,6 +6,7 @@ from datetime import datetime
 class UserProfileOut(BaseModel):
     id: int
     user_id: UUID
+    clabe: str
     first_name: str
     last_name: str
     phone_number: Optional[str]
