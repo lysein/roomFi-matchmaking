@@ -11,6 +11,7 @@ from src.api.routers import users
 from src.api.routers import landlords
 from src.api.routers import properties
 from src.api.routers import juno
+from src.api.routers import withdraw
 
 
 app = FastAPI()
@@ -28,6 +29,7 @@ app.include_router(users.router, prefix="/db",tags=["user_profiles"])
 app.include_router(landlords.router, prefix="/db", tags=["landlord_profiles"])
 app.include_router(properties.router, prefix="/db", tags=["properties"])
 app.include_router(juno.router, prefix="/juno", tags=["juno"])
+app.include_router(withdraw.router, prefix="/funds", tags=["funds"])
 
 if __name__ == "__main__":
     import uvicorn
