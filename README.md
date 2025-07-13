@@ -1,5 +1,5 @@
 # roomFi-matchmaking
- matchmaking engine for the roomfie app
+ matchmaking engine for the roomfi app
 
 # Licensing Notice
 
