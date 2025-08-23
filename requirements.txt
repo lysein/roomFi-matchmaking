@@ -5,3 +5,6 @@ asyncpg
 jwt
 pydantic-settings
 pydantic[email]
+httpx
+langchain
+langchain-core

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     JUNO_BASE_URL: str
     JUNO_API_KEY: str
     JUNO_API_SECRET: str
+    CLOUDFLARE_ACCOUNT_ID: str
+    CLOUDFLARE_API_TOKEN: str
+    LLM_MODEL: str
 
 settings = Settings()
 
