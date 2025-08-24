@@ -8,3 +8,6 @@ pydantic[email]
 httpx
 langchain
 langchain-core
+fastapi
+uvicorn
+supabase

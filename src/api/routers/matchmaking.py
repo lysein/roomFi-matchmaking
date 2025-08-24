@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Body
 from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel
 from src.api.config import settings
 from src.api.services.ai_service import ai_service
 from supabase import create_client, Client
@@ -9,20 +10,27 @@ import logging
 router = APIRouter()
 client: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
 
+
+
+class MatchmakingRequest(BaseModel):
+    user_prompt: Optional[str] = None
+
 @router.post("/match/top")
 async def match_top(
-    user_id: str, 
+    user_id: str,
     top_k: Optional[int] = Query(5, ge=1, le=20),
     ai_query: Optional[bool] = Query(False, description="Enable AI processing of user prompt"),
-    user_prompt: Optional[str] = Query(None, description="User's voice input as text (required when ai_query=True)")
+    body: Optional[MatchmakingRequest] = Body(None)
 ):
     try:
         # Validate AI query parameters
-        if ai_query and not user_prompt:
-            raise HTTPException(
-                status_code=422, 
-                detail="user_prompt is required when ai_query=True"
-            )
+        user_prompt = body.user_prompt if (body and body.user_prompt) else None
+        if ai_query:
+            if not user_prompt:
+                raise HTTPException(
+                    status_code=422,
+                    detail="user_prompt is required in the request body when ai_query=True"
+                )
         
         # Initialize AI insights for response
         ai_insights = None
@@ -44,24 +52,62 @@ async def match_top(
                 logging.info(f"Processing AI query for user {user_id}")
                 ai_insights = await ai_service.process_user_prompt(user_prompt, user)
                 
-                # Update user preferences with AI extracted preferences if successful
-                if (ai_insights.get("processing_status") in ["success", "partial"] and 
-                    ai_insights.get("extracted_preferences") and 
-                    ai_insights["extracted_preferences"].get("updated")):
-                    
-                    updated_prefs = ai_insights["extracted_preferences"]["updated"]
-                    # Override user data with AI-updated preferences for matching
-                    user.update(updated_prefs)
-                    logging.info(f"Updated user preferences with AI insights: {updated_prefs}")
+                # Handle AI processing results with enhanced fallback logic
+                if ai_insights.get("processing_status") in ["success", "partial"]:
+                    # AI succeeded - use updated preferences
+                    extracted_preferences = ai_insights.get("extracted_preferences", {})
+                    if extracted_preferences.get("updated"):
+                        user.update(extracted_preferences["updated"])
+                        logging.info(f"Updated user preferences with AI insights")
                 
+                elif ai_insights.get("processing_status") == "fallback_to_existing":
+                    # AI failed but we have existing preferences - continue with original user data
+                    logging.info(f"AI failed, falling back to existing preferences for user {user_id}")
+                
+                elif ai_insights.get("processing_status") == "insufficient_data":
+                    # AI succeeded but data is still insufficient
+                    raise HTTPException(
+                        status_code=422,
+                        detail={
+                            "error": "Insufficient preferences for matching",
+                            "message": "Could not extract enough information from your query to perform matching. Please provide more details about your budget, location, or lifestyle preferences.",
+                            "ai_insights": ai_insights,
+                            "suggestions": ai_insights.get("extracted_preferences", {}).get("ai_enhancements", {}).get("suggestions", [])
+                        }
+                    )
+                
+                elif ai_insights.get("processing_status") == "failed":
+                    # AI failed and no existing preferences
+                    if ai_insights.get("fallback_reason") and "no existing preferences" in ai_insights.get("fallback_reason", ""):
+                        raise HTTPException(
+                            status_code=422,
+                            detail={
+                                "error": "Unable to process request",
+                                "message": "Could not extract preferences from your query and you don't have existing preferences saved. Please provide clear information about your budget range, preferred location, and any lifestyle preferences.",
+                                "ai_insights": ai_insights,
+                                "suggestions": [
+                                    "Include budget range (e.g., '$1000-1500 per month')",
+                                    "Specify location (e.g., 'in Brooklyn' or 'near downtown')",
+                                    "Mention lifestyle preferences (e.g., 'gym', 'quiet', 'pet-friendly')"
+                                ]
+                            }
+                        )
+                    else:
+                        # AI failed but we might have existing preferences - let it continue to validation
+                        logging.warning(f"AI processing failed for user {user_id}, attempting to use existing preferences")
+                
+            except HTTPException:
+                # Re-raise HTTP exceptions
+                raise
             except Exception as e:
                 logging.error(f"AI processing failed for user {user_id}: {e}")
-                # Set failed status but continue with regular matching
+                # Set failed status but continue with existing preferences if available
                 ai_insights = {
                     "original_prompt": user_prompt,
                     "translated_prompt": None,
                     "extracted_preferences": None,
                     "processing_status": "failed",
+                    "fallback_reason": f"Exception in AI processing: {str(e)}",
                     "error": str(e)
                 }
 
